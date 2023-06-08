@@ -10,7 +10,7 @@ version=0.1
 author=MEDAD TECH
 email=info@medad.tech
 
-about=Provide a brief description of the plugin and its purpose.
+about=Batch import of CSV/TSV vector layers
 
 tracker=http://bugs
 repository=http://repo
