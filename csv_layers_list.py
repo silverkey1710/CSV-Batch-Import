@@ -385,8 +385,13 @@ class CsvLayersList:
                     # handle if coordinates doesn't match with the file
                     message = f"Can't load file {temp}, Please check it's coordinates"
                     self.iface.messageBar().pushMessage(message, level=2)
+
+                    # if only one file in csvLst with wrong coordinates
+                    if len(self.csvLst) == 1:
+                        return
                     # then go to next file
-                    continue
+                    else:
+                        continue
 
                 # get directory path from file path
                 prnt_dir = os.path.dirname(temp)
