@@ -346,7 +346,7 @@ class CsvLayersList:
                 # loop over dir names in the path
                 for component in comp_lst:
                     # get full path of directory
-                    full_path = full_path + self.separator + component
+                    full_path = os.path.join(full_path, component)
 
                     # check if path is in dictionary node_dict
                     if full_path not in node_dict:
