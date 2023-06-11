@@ -581,7 +581,7 @@ class CsvLayersList:
             self.dlg.csv_tree.itemClicked.connect(self.evt_itm_selected)
             self.dlg.run_btn.clicked.connect(self.evt_run_btn_clicked)
             self.dlg.rejected.connect(self.on_rejected)
-            self.dlg.csv_tree.setHeaderLabels(['CSV File Tree'])
+            self.dlg.csv_tree.setHeaderLabels(['CSV Files Tree'])
             self.dlg.csv_tree.header().setDefaultAlignment(Qt.AlignCenter | Qt.AlignVCenter)
 
         # clear tree every time you run the plugin
