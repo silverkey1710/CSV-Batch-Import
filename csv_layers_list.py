@@ -3,7 +3,9 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
-from qgis.core import QgsVectorLayer, QgsProject, QgsLayerTreeGroup, QgsLayerTreeLayer
+from qgis.gui import QgsProjectionSelectionDialog
+from qgis.core import QgsVectorLayer, QgsProject, QgsLayerTreeGroup, QgsLayerTreeLayer, QgsCoordinateReferenceSystem
+
 import os.path
 import csv
 # Initialize Qt resources from file resources.py
@@ -32,6 +34,7 @@ class CsvLayersList:
         self.include_all = []                                       # merge both csvList and dir_list in one list
         self.x_field = ''                                           # store x coordinate
         self.y_field = ''                                           # store y coordinate
+        self.recent_crs_lst = []                                    # store recent crs
         self.root_group = QgsProject.instance().layerTreeRoot()     # create root of tree
 
         self.iface = iface
@@ -314,6 +317,8 @@ class CsvLayersList:
     it creates group nodes for directories and adding vector layers for CSV/TSV files, 
     based on the hierarchical structure of the paths, using the full path as a unique identifier"""
     def build_tree_from_paths(self, paths_list):
+        # get crs from combobox as str then convert to QgsCoordinateReferenceSystem obj then get .authid()
+        crs = QgsCoordinateReferenceSystem(self.dlg.crs_cmbBox.currentText().split(' - ')[0]).authid()
         # find the common path among all the paths
         top_level_path = os.path.commonpath(self.include_all).replace('/', self.separator)
         # get base name of path
@@ -378,7 +383,7 @@ class CsvLayersList:
                     delimiter = '\\t'
 
                 # get uri & convert file to vector layer
-                uri = f"file:///{temp}?delimiter={delimiter}&crs=epsg:4326&xField={self.x_field}&yField={self.y_field}"
+                uri = f"file:///{temp}?delimiter={delimiter}&crs={crs}&xField={self.x_field}&yField={self.y_field}"
                 layer = QgsVectorLayer(uri, name, 'delimitedtext')
 
                 if layer.isValid():
@@ -491,6 +496,17 @@ class CsvLayersList:
         # close dialog window
         self.dlg.close()
 
+    """The function allows the user to select a CRS from the QgsProjectionSelectionDialog 
+    and updates the combobox's current text accordingly."""
+    def evt_crs_btn_clicked(self):
+        dialog = QgsProjectionSelectionDialog()
+        dialog.exec_()
+
+        crs = dialog.crs()
+        crs_description = QgsCoordinateReferenceSystem(crs).description()
+        crs_authid = QgsCoordinateReferenceSystem(crs).authid()
+        self.dlg.crs_cmbBox.setCurrentText(crs_authid + ' - ' + crs_description)
+
     """"The function manages the selection of items in the tree and updates the corresponding 
     lists (dir_list or csvLst) based on the checked or unchecked state of the items."""
     def evt_itm_selected(self, item):
@@ -580,6 +596,7 @@ class CsvLayersList:
         self.dlg.lineEdit.clear()
         self.y_field = self.dlg.yfield_cmbBox.clear()
         self.x_field = self.dlg.xfield_cmbBox.clear()
+        self.dlg.crs_cmbBox.clear()
         self.csvLst = []
         self.dir_list = []
         self.include_all = []
@@ -595,12 +612,22 @@ class CsvLayersList:
 
             self.dlg = CsvLayersListDialog()
             self.dlg.browse_btn.clicked.connect(self.evt_browse_btn_clicked)
+            self.dlg.crs_btn.clicked.connect(self.evt_crs_btn_clicked)
             self.dlg.csv_tree.itemClicked.connect(self.evt_itm_selected)
             self.dlg.run_btn.clicked.connect(self.evt_run_btn_clicked)
             self.dlg.rejected.connect(self.on_rejected)
             self.dlg.csv_tree.setHeaderLabels(['CSV Files Tree'])
             self.dlg.csv_tree.header().setDefaultAlignment(Qt.AlignCenter | Qt.AlignVCenter)
 
+        # clear crs combo box every time we run plugin
+        self.dlg.crs_cmbBox.clear()
+
+        # get recent CRS in list
+        self.recent_crs_lst = QSettings().value('UI/recentProjectionsAuthId')
+        # loop on CRS list and get description for each then add both to combo box
+        for crs_authid in self.recent_crs_lst:
+            crs_description = QgsCoordinateReferenceSystem(crs_authid).description()
+            self.dlg.crs_cmbBox.addItem(crs_authid + ' - ' + crs_description)
+
         # show the dialog
         self.dlg.show()
-
