@@ -505,7 +505,9 @@ class CsvLayersList:
         crs = dialog.crs()
         crs_description = QgsCoordinateReferenceSystem(crs).description()
         crs_authid = QgsCoordinateReferenceSystem(crs).authid()
+        print(crs_authid)
         self.dlg.crs_cmbBox.setCurrentText(crs_authid + ' - ' + crs_description)
+
 
     """"The function manages the selection of items in the tree and updates the corresponding 
     lists (dir_list or csvLst) based on the checked or unchecked state of the items."""
