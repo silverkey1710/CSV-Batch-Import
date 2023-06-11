@@ -273,6 +273,7 @@ class CsvLayersList:
     def evt_browse_btn_clicked(self):
         # get full path and base name and the remaining path outside tree
         self.path = selected_directory = QFileDialog.getExistingDirectory(None, 'Select Directory').replace('/', self.separator)
+        self.dlg.lineEdit.setText(selected_directory)
 
         if selected_directory:
             # clear previous َQtree
