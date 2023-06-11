@@ -335,7 +335,6 @@ class CsvLayersList:
             comp_lst = path.split(self.separator)
             # remove '' from list to get each directory name as item [dir1, dir2, ... file.txt]
             comp_lst = [c for c in comp_lst if c != '']
-            print(comp_lst)
 
             # if path is directory
             if os.path.isdir(temp):
