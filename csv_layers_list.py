@@ -323,6 +323,7 @@ class CsvLayersList:
 
         # Create a dictionary to store path as key and its node as value (node_dict[path] = node)
         node_dict = {}
+
         # loop over each path in paths_list
         for path in paths_list:
             # keep a copy un-altered
@@ -360,6 +361,7 @@ class CsvLayersList:
 
                     # child node as parent node (current dir)
                     current_node = node_dict[full_path]  # Set the current node as the child node
+
             # if path is a file
             else:
                 # get base name of path (file.csv)
@@ -461,6 +463,18 @@ class CsvLayersList:
 
         # if there's coordinate values & files in csvLst
         if self.x_field and self.y_field and self.csvLst:
+            # temp list to carry directories contain csv/tsv files
+            new_dir_list = []
+            for directory in self.dir_list:
+                # get children files for each directory in dir_list
+                files_lst = self.get_dirs_files(directory)[1]
+                # check if there is at least one file with the '.csv' or '.tsv' extension
+                if any('.csv' in file or '.tsv' in file for file in files_lst):
+                    # add directory to temp list
+                    new_dir_list.append(directory)
+
+            # set the temp list as dir_list
+            self.dir_list = new_dir_list
             # merge directory list (dir_list) & CSV file list (csvLst) & use it to build tree
             self.include_all = self.dir_list + self.csvLst
             self.build_tree_from_paths(self.include_all)
@@ -561,6 +575,9 @@ class CsvLayersList:
      or lists associated with it when the user cancels the dialog."""
     def on_rejected(self):
         # Perform actions when the dialog is rejected (Cancel button clicked)
+        # clear tree every time you run the plugin
+        self.dlg.csv_tree.clear()
+        self.dlg.lineEdit.clear()
         self.y_field = self.dlg.yfield_cmbBox.clear()
         self.x_field = self.dlg.xfield_cmbBox.clear()
         self.csvLst = []
@@ -584,15 +601,6 @@ class CsvLayersList:
             self.dlg.csv_tree.setHeaderLabels(['CSV Files Tree'])
             self.dlg.csv_tree.header().setDefaultAlignment(Qt.AlignCenter | Qt.AlignVCenter)
 
-        # clear tree every time you run the plugin
-        self.dlg.csv_tree.clear()
-
         # show the dialog
         self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+
