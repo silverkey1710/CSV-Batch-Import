@@ -331,10 +331,11 @@ class CsvLayersList:
             # get the part that will be added to our tree
             path = components[1]
 
-            # Split the path again into 2 components with new sep ==> \\
-            comp_lst = path.split('\\')
+            # Split the path again into components with new sep ==> \\
+            comp_lst = path.split(self.separator)
             # remove '' from list to get each directory name as item [dir1, dir2, ... file.txt]
             comp_lst = [c for c in comp_lst if c != '']
+            print(comp_lst)
 
             # if path is directory
             if os.path.isdir(temp):
@@ -426,7 +427,7 @@ class CsvLayersList:
                         # loop over dir names in the path
                         for component in comp_lst:
                             # get full path of directory
-                            full_path = full_path + '\\' + component
+                            full_path = full_path + self.separator + component
 
                             # check if path is in dictionary node_dict & not file to avoid last component (file.csv)
                             if full_path not in node_dict and os.path.isdir(full_path):
