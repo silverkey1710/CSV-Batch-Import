@@ -274,6 +274,8 @@ class CsvLayersList:
     """The function allows the user to select a directory, populates the csv_tree with subdirectories and files 
     under the selected directory, and gets the column names from the first CSV file to populate the QComboBoxes."""
     def evt_browse_btn_clicked(self):
+        self.y_field = self.dlg.yfield_cmbBox.clear()
+        self.x_field = self.dlg.xfield_cmbBox.clear()
         # get full path and base name and the remaining path outside tree
         self.path = selected_directory = QFileDialog.getExistingDirectory(None, 'Select Directory').replace('/', self.separator)
         self.dlg.lineEdit.setText(selected_directory)
