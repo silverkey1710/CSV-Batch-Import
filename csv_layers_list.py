@@ -505,11 +505,9 @@ class CsvLayersList:
         crs = dialog.crs()
         crs_description = QgsCoordinateReferenceSystem(crs).description()
         crs_authid = QgsCoordinateReferenceSystem(crs).authid()
-        print(crs_authid)
         self.dlg.crs_cmbBox.setCurrentText(crs_authid + ' - ' + crs_description)
 
-
-    """"The function manages the selection of items in the tree and updates the corresponding 
+    """"The function manages the selection of items in the tree and updates the corresponding
     lists (dir_list or csvLst) based on the checked or unchecked state of the items."""
     def evt_itm_selected(self, item):
         # get item's full path
@@ -624,11 +622,14 @@ class CsvLayersList:
         # clear crs combo box every time we run plugin
         self.dlg.crs_cmbBox.clear()
 
-        # get recent CRS in list
+        # get recent CRS authority identifier in list
         self.recent_crs_lst = QSettings().value('UI/recentProjectionsAuthId')
+
         # loop on CRS list and get description for each then add both to combo box
         for crs_authid in self.recent_crs_lst:
+            # use authority identifier to get description
             crs_description = QgsCoordinateReferenceSystem(crs_authid).description()
+            # concatenate both authid & description then add them as item in combocox list
             self.dlg.crs_cmbBox.addItem(crs_authid + ' - ' + crs_description)
 
         # show the dialog
