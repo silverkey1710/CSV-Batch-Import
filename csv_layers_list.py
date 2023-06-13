@@ -626,6 +626,8 @@ class CsvLayersList:
 
         # get recent CRS authority identifier in list
         self.recent_crs_lst = QSettings().value('UI/recentProjectionsAuthId')
+        # QSettings().remove('UI/recentProjections')
+        # QSettings().remove('UI/recentProjectionsAuthId')
 
         # check if there's any recent CRS
         if self.recent_crs_lst:
