@@ -626,14 +626,22 @@ class CsvLayersList:
 
         # get recent CRS authority identifier in list
         self.recent_crs_lst = QSettings().value('UI/recentProjectionsAuthId')
-        print(self.recent_crs_lst)
 
-        # loop on CRS list and get description for each then add both to combo box
-        for crs_authid in self.recent_crs_lst:
-            # use authority identifier to get description
-            crs_description = QgsCoordinateReferenceSystem(crs_authid).description()
-            # concatenate both authid & description then add them as item in combocox list
-            self.dlg.crs_cmbBox.addItem(crs_authid + ' - ' + crs_description)
+        # check if there's any recent CRS
+        if self.recent_crs_lst:
+            # loop on CRS list and get description for each then add both to combo box
+            for crs_authid in self.recent_crs_lst:
+                # use authority identifier to get description
+                crs_description = QgsCoordinateReferenceSystem(crs_authid).description()
+                # concatenate both authid & description then add them as item in combocox list
+                self.dlg.crs_cmbBox.addItem(crs_authid + ' - ' + crs_description)
+        # if there's no recent CRS
+        else:
+            # get default CRS authid & description
+            default_crs_authid = QgsProject.instance().crs().authid()
+            default_crs_description = QgsProject.instance().crs().description()
+            # concatenate both default authid & description then add them as item in combocox list
+            self.dlg.crs_cmbBox.addItem( default_crs_authid + ' - ' + default_crs_description)
 
         # show the dialog
         self.dlg.show()
