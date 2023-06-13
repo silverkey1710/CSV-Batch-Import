@@ -626,6 +626,7 @@ class CsvLayersList:
 
         # get recent CRS authority identifier in list
         self.recent_crs_lst = QSettings().value('UI/recentProjectionsAuthId')
+        print(self.recent_crs_lst)
 
         # loop on CRS list and get description for each then add both to combo box
         for crs_authid in self.recent_crs_lst:
