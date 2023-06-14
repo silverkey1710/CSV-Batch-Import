@@ -507,6 +507,7 @@ class CsvLayersList:
         crs = dialog.crs()
         crs_description = QgsCoordinateReferenceSystem(crs).description()
         crs_authid = QgsCoordinateReferenceSystem(crs).authid()
+        self.dlg.crs_cmbBox.addItem(crs_authid + ' - ' + crs_description)
         self.dlg.crs_cmbBox.setCurrentText(crs_authid + ' - ' + crs_description)
 
     """"The function manages the selection of items in the tree and updates the corresponding
