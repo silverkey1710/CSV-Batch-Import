@@ -519,12 +519,12 @@ class CsvLayersList:
         # if item selected is a file
         if os.path.isfile(full_path):
             # if file is checked & its path doesn't exist in csvLst
-            if item.checkState(0) == QtCore.Qt.Checked and full_path not in self.csvLst:
+            if item.checkState(0) == Qt.Checked and full_path not in self.csvLst:
                 # add its path to csvLst
                 self.csvLst.append(full_path)
 
             # if file is unchecked & its path exists in csvLst
-            elif item.checkState(0) == QtCore.Qt.Unchecked and full_path in self.csvLst:
+            elif item.checkState(0) == Qt.Unchecked and full_path in self.csvLst:
                 # remove its path from csvLst
                 self.csvLst.remove(full_path)
 
