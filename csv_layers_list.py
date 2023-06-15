@@ -389,7 +389,7 @@ class CsvLayersList:
                 layer = QgsVectorLayer(uri, name, 'delimitedtext')
 
                 if layer.isValid():
-                    # add layer to canvas without displaying it
+                    # add layer to canvas without displaying it the tree
                     QgsProject.instance().addMapLayer(layer, False)
                 else:
                     # handle if coordinates doesn't match with the file
