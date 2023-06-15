@@ -632,6 +632,14 @@ class CsvLayersList:
 
         # check if there's any recent CRS
         if self.recent_crs_lst:
+            # get default CRS authid & description
+            default_crs_authid = QgsProject.instance().crs().authid()
+            default_crs_description = QgsProject.instance().crs().description()
+            # concatenate both default authid & description then add them as item in combocox list
+            self.dlg.crs_cmbBox.addItem(default_crs_authid + ' - ' + default_crs_description)
+            # set it as current item displayed initially in combox
+            self.dlg.crs_cmbBox.setCurrentText(default_crs_authid + ' - ' + default_crs_description)
+
             # loop on CRS list and get description for each then add both to combo box
             for crs_authid in self.recent_crs_lst:
                 # use authority identifier to get description
