@@ -31,7 +31,6 @@ class CsvLayersList:
         self.separator = os.path.sep                                # Get the platform-specific path separator
         self.csvLst = []                                            # keep all csv files chosen by user
         self.dir_list = []                                          # Keep all folder that will be added to group tree
-        self.include_all = []                                       # merge both csvList and dir_list in one list
         self.x_field = ''                                           # store x coordinate
         self.y_field = ''                                           # store y coordinate
         self.recent_crs_lst = []                                    # store recent crs
@@ -315,149 +314,115 @@ class CsvLayersList:
                     self.dlg.xfield_cmbBox.addItems(header_list)
                     self.dlg.yfield_cmbBox.addItems(header_list)
 
+    """The function checks if file is valid as a layer or not, and also return a layer if it's valid"""
+    def file_is_valid(self, fpath):
+        # get crs from combobox as str then convert to QgsCoordinateReferenceSystem obj then get .authid()
+        crs = QgsCoordinateReferenceSystem(self.dlg.crs_cmbBox.currentText().split(' - ')[0]).authid()
+
+        file_name = os.path.basename(fpath)
+        name = os.path.splitext(file_name)[0]
+        extension = os.path.splitext(file_name)[1]
+
+        # check file type and change delimiter accordingly
+        if extension == '.csv':
+            delimiter = ','
+        elif extension == '.tsv':
+            delimiter = '\\t'
+
+        # get uri & convert file to vector layer
+        uri = f"file:///{fpath}?delimiter={delimiter}&crs={crs}&xField={self.x_field}&yField={self.y_field}"
+        layer = QgsVectorLayer(uri, name, 'delimitedtext')
+
+        if layer.isValid():
+            # add layer to canvas without displaying it the tree
+            QgsProject.instance().addMapLayer(layer, False)
+            return True, layer
+        else:
+            return False, None
+
     """The function populates node tree based on the provided paths chosen by user, 
     it creates group nodes for directories and adding vector layers for CSV/TSV files, 
     based on the hierarchical structure of the paths, using the full path as a unique identifier"""
     def build_tree_from_paths(self, paths_list):
-        # get crs from combobox as str then convert to QgsCoordinateReferenceSystem obj then get .authid()
-        crs = QgsCoordinateReferenceSystem(self.dlg.crs_cmbBox.currentText().split(' - ')[0]).authid()
-        # find the common path among all the paths
-        top_level_path = os.path.commonpath(self.include_all).replace('/', self.separator)
+        # handle if only one file is selected
+        if len(self.csvLst) == 1:
+            top_level_path = os.path.dirname(self.csvLst[0]).replace('/', self.separator)
+        else:
+            # find the common path among all the paths
+            top_level_path = os.path.commonpath(self.csvLst).replace('/', self.separator)
         # get base name of path
         top_level_name = os.path.basename(top_level_path)
         # convert it to node
         top_level_node = QgsLayerTreeGroup(top_level_name)
 
         # Create a dictionary to store path as key and its node as value (node_dict[path] = node)
-        node_dict = {}
+        node_dict = {top_level_path:top_level_node}
 
         # loop over each path in paths_list
         for path in paths_list:
             # keep a copy un-altered
             temp = path
-            # Split the path into components with seperator => top level path
-            components = path.split(top_level_path)
-            # get the part that will be added to our tree
-            path = components[1]
-
-            # Split the path again into components with new sep ==> \\
-            comp_lst = path.split(self.separator)
-            # remove '' from list to get each directory name as item [dir1, dir2, ... file.txt]
-            comp_lst = [c for c in comp_lst if c != '']
-
-            # if path is directory
-            if os.path.isdir(temp):
-                # set initial value for node as top level node (parent node)
-                current_node = top_level_node
-                # set initial value for path as top level path
-                full_path = top_level_path
-
-                # loop over dir names in the path
-                for component in comp_lst:
-                    # get full path of directory
-                    full_path = os.path.join(full_path, component)
-
-                    # check if path is in dictionary node_dict
-                    if full_path not in node_dict:
-                        # create a new group node for the directory (component)
-                        dir_group_node = QgsLayerTreeGroup(component)
-                        # add it as a child to it's parent
-                        current_node.addChildNode(dir_group_node)
-                        # add path/node to node_dict dictionary
-                        node_dict[full_path] = dir_group_node
-
-                    # child node as parent node (current dir)
-                    current_node = node_dict[full_path]  # Set the current node as the child node
-
-            # if path is a file
+            isvalid, layer = self.file_is_valid(path)
+            # handle if coordinates doesn't match with the file
+            if not isvalid:
+                message = f"Can't load file {path}, Please check it's coordinates"
+                self.iface.messageBar().pushMessage(message, level=2)
+            # coordinates match with the file
             else:
-                # get base name of path (file.csv)
-                file_name = os.path.basename(temp)
-
-                # split name to name (file) & extension (.csv)
-                name = os.path.splitext(file_name)[0]
-                extension = os.path.splitext(file_name)[1]
-
-                # check file type and change delimiter accordingly
-                if extension == '.csv':
-                    delimiter = ','
-                elif extension == '.tsv':
-                    delimiter = '\\t'
-
-                # get uri & convert file to vector layer
-                uri = f"file:///{temp}?delimiter={delimiter}&crs={crs}&xField={self.x_field}&yField={self.y_field}"
-                layer = QgsVectorLayer(uri, name, 'delimitedtext')
-
-                if layer.isValid():
-                    # add layer to canvas without displaying it the tree
-                    QgsProject.instance().addMapLayer(layer, False)
+                # handle if only one file is selected
+                if len(self.csvLst) == 1:
+                    comp_lst = [os.path.basename(temp)]
                 else:
-                    # handle if coordinates doesn't match with the file
-                    message = f"Can't load file {temp}, Please check it's coordinates"
-                    self.iface.messageBar().pushMessage(message, level=2)
+                    # Split the path into components with seperator => top level path
+                    components = path.split(top_level_path)
+                    # get the part that will be added to our tree
+                    path = components[1]
 
-                    # if only one file in csvLst with wrong coordinates
-                    if len(self.csvLst) == 1:
-                        return
-                    # then go to next file
-                    else:
-                        continue
+                    # Split the path again into components with new sep ==> \\
+                    comp_lst = path.split(self.separator)
+                    # remove '' from list to get each directory name as item [dir1, dir2, ... file.txt]
+                    comp_lst = [c for c in comp_lst if c != '']
 
-                # get directory path from file path
-                prnt_dir = os.path.dirname(temp)
-                # if directory path exist in node_dict
-                if prnt_dir in node_dict:
-                    # then get the node corresponding to this path from node_dict
-                    prnt_node = node_dict[prnt_dir]
-                    # convert layer to node
-                    layer_node = QgsLayerTreeLayer(layer)
-                    # add layer as a child to its parent directory (node)
-                    prnt_node.addChildNode(layer_node)
+                # handle if only one file is selected
+                # set initial root path
+                if len(self.csvLst) == 1:
+                    comp_path = os.path.dirname(temp)
                 else:
-                    # if directory path doesn't exist in node_dict
-                    # get parent name from the parent directory
-                    prnt_name = os.path.basename(prnt_dir)
-
-                    # if only one file is selected
-                    if os.path.isfile(top_level_path):
-                        # convert parent directory to node
-                        top_level_node = QgsLayerTreeGroup(prnt_name)
+                    comp_path = top_level_path
+                # set initial node as top level
+                prnt_node = top_level_node
+                # loop over components list
+                for c in comp_lst:
+                    # join top path and comp
+                    comp_path = os.path.join(comp_path, c)
+                    # check if comp path is dir and not in node_dict
+                    if os.path.isdir(comp_path) and comp_path not in node_dict:
+                        # add path as key & node as value
+                        node_dict[comp_path] = QgsLayerTreeGroup(c)
+                        # add current node to parent node
+                        prnt_node.addChildNode(node_dict[comp_path])
+                        # set child node as parent for next loop
+                        prnt_node = node_dict[comp_path]
+                    # check if comp path is in node_dict
+                    elif comp_path in node_dict:
+                        # set child node as parent for next loop
+                        prnt_node = node_dict[comp_path]
+                    # check if comp path is file (last item in comp_lst)
+                    elif os.path.isfile(comp_path):
+                        if len(self.csvLst) == 1:
+                            prnt_dir = top_level_path
+                        else:
+                            # get parent directory path from file path
+                            prnt_dir = os.path.dirname(temp)
+                        # get the corresponding value to key/(parent path) from node dic
+                        prnt_node = node_dict[prnt_dir]
                         # convert layer to node
                         layer_node = QgsLayerTreeLayer(layer)
-                        # add layer as a child to its parent directory (node)
-                        top_level_node.addChildNode(layer_node)
-                    else:
-                        # if more than one file selected
-                        # set initial value for node as top level node (parent node)
-                        current_node = top_level_node
-                        # set initial value for path as top level path
-                        full_path = top_level_path
-
-                        # loop over dir names in the path
-                        for component in comp_lst:
-                            # get full path of directory
-                            full_path = full_path + self.separator + component
-
-                            # check if path is in dictionary node_dict & not file to avoid last component (file.csv)
-                            if full_path not in node_dict and os.path.isdir(full_path):
-                                # convert directory name to node
-                                dir_group_node = QgsLayerTreeGroup(component)
-                                # add it as a child to it's parent
-                                current_node.addChildNode(dir_group_node)
-                                # add path/node to node_dict dictionary
-                                node_dict[full_path] = dir_group_node
-                                # child node as parent node (current dir)
-                                current_node = node_dict[full_path]
-
-                            # in case of last component (file.csv)
-                            else:
-                                # convert layer to node
-                                layer_node = QgsLayerTreeLayer(layer)
-                                # add layer as a child to its parent directory (node)
-                                current_node.addChildNode(layer_node)
+                        # add layer ti its parent directory
+                        prnt_node.addChildNode(layer_node)
         # clear node_dict & include_all
         node_dict.clear()
-        self.include_all = []
+        self.csvLst = []
         self.root_group.addChildNode(top_level_node)
 
     """"The function checks if valid coordinate fields and CSV files are selected. 
@@ -482,9 +447,8 @@ class CsvLayersList:
 
             # set the temp list as dir_list
             self.dir_list = new_dir_list
-            # merge directory list (dir_list) & CSV file list (csvLst) & use it to build tree
-            self.include_all = self.dir_list + self.csvLst
-            self.build_tree_from_paths(self.include_all)
+            # send CSV files list (csvLst) & use it to build tree
+            self.build_tree_from_paths(self.csvLst)
         else:
             #  # if there's no coordinate values or files in csvLst
             self.iface.messageBar().pushMessage(
@@ -492,7 +456,6 @@ class CsvLayersList:
             # clear selected directories
             self.csvLst = []
             self.dir_list = []
-            self.include_all = []
             return
 
         # close dialog window
