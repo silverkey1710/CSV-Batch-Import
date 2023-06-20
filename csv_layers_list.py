@@ -275,8 +275,10 @@ class CsvLayersList:
     def evt_browse_btn_clicked(self):
         self.y_field = self.dlg.yfield_cmbBox.clear()
         self.x_field = self.dlg.xfield_cmbBox.clear()
+        self.dir_list = []
+        self.csvLst = []
         # get full path and base name and the remaining path outside tree
-        self.path = selected_directory = QFileDialog.getExistingDirectory(None, 'Select Directory').replace('/', self.separator)
+        self.path = selected_directory = os.path.normpath(QFileDialog.getExistingDirectory(None, 'Select Directory'))
         self.dlg.lineEdit.setText(selected_directory)
 
         if selected_directory:
@@ -346,17 +348,17 @@ class CsvLayersList:
     def build_tree_from_paths(self, paths_list):
         # handle if only one file is selected
         if len(self.csvLst) == 1:
-            top_level_path = os.path.dirname(self.csvLst[0]).replace('/', self.separator)
+            top_level_path = os.path.normpath(os.path.dirname(self.csvLst[0]))
         else:
             # find the common path among all the paths
-            top_level_path = os.path.commonpath(self.csvLst).replace('/', self.separator)
+            top_level_path = os.path.normpath(os.path.commonpath(self.csvLst))
         # get base name of path
         top_level_name = os.path.basename(top_level_path)
         # convert it to node
         top_level_node = QgsLayerTreeGroup(top_level_name)
 
         # Create a dictionary to store path as key and its node as value (node_dict[path] = node)
-        node_dict = {top_level_path:top_level_node}
+        node_dict = {top_level_path: top_level_node}
 
         # loop over each path in paths_list
         for path in paths_list:
@@ -366,7 +368,7 @@ class CsvLayersList:
             # handle if coordinates doesn't match with the file
             if not isvalid:
                 message = f"Can't load file {path}, Please check it's coordinates"
-                self.iface.messageBar().pushMessage(message, level=2)
+                self.iface.messageBar().pushMessage(message, level=1)
             # coordinates match with the file
             else:
                 # handle if only one file is selected
@@ -379,9 +381,9 @@ class CsvLayersList:
                     path = components[1]
 
                     # Split the path again into components with new sep ==> \\
-                    comp_lst = path.split(self.separator)
+                    comp_lst = list(path.split(self.separator))
                     # remove '' from list to get each directory name as item [dir1, dir2, ... file.txt]
-                    comp_lst = [c for c in comp_lst if c != '']
+                    comp_lst.remove('')
 
                 # handle if only one file is selected
                 # set initial root path
@@ -492,7 +494,7 @@ class CsvLayersList:
                 self.csvLst.remove(full_path)
 
         # if item selected is a directory
-        if os.path.isdir(full_path):
+        elif os.path.isdir(full_path):
             # if directory is unchecked & its path exist in dir_list
             if item.checkState(0) == Qt.Unchecked and full_path in self.dir_list:
                 # remove path & its children recursively from dir_list
