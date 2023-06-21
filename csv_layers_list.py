@@ -228,7 +228,7 @@ class CsvLayersList:
             child_item = QTreeWidgetItem([os.path.basename(directory)])
             # add it to its parent in csv tree
             item.addChild(child_item)
-            # make it checkable
+            # make it check-able
             child_item.setFlags(child_item.flags() | Qt.ItemIsUserCheckable)
             # set it's state ny default to checked
             child_item.setCheckState(0, Qt.Checked)
@@ -244,7 +244,7 @@ class CsvLayersList:
                 child_item = QTreeWidgetItem([os.path.basename(file)])
                 #  add it to its parent as a child
                 item.addChild(child_item)
-                # make it checkable
+                # make it check-able
                 child_item.setFlags(child_item.flags() | Qt.ItemIsUserCheckable)
                 #  set it's state to checked
                 child_item.setCheckState(0, Qt.Checked)
@@ -279,7 +279,7 @@ class CsvLayersList:
             # convert directory name to item & add it as top level of tree
             top_level_item = QTreeWidgetItem([basename])
             self.dlg.csv_tree.addTopLevelItem(top_level_item)
-            # make it checkable
+            # make it check-able
             top_level_item.setFlags(top_level_item.flags() | Qt.ItemIsUserCheckable)
             #  set it's state to checked
             top_level_item.setCheckState(0, Qt.Checked)
@@ -420,8 +420,8 @@ class CsvLayersList:
         self.root_group.addChildNode(top_level_node)
 
     def evt_run_btn_clicked(self):
-        """"The function checks if valid coordinate fields and CSV files are selected.
-        If so, it uses CSV file list to build the tree structure. """
+        """The function checks if valid coordinate fields and CSV files are selected.
+        If so, it uses CSV file list to build the tree structure"""
         # get coordinates name in file by user
         self.x_field = self.dlg.xfield_cmbBox.currentText()
         self.y_field = self.dlg.yfield_cmbBox.currentText()
@@ -456,7 +456,7 @@ class CsvLayersList:
 
     def evt_crs_btn_clicked(self):
         """The function allows the user to select a CRS from the QgsProjectionSelectionDialog
-        and updates the combobox's current text accordingly."""
+        and updates the combo box's current text accordingly."""
         dialog = QgsProjectionSelectionDialog()
         dialog.exec_()
 
@@ -467,7 +467,7 @@ class CsvLayersList:
         self.dlg.crs_cmbBox.setCurrentText(crs_authid + ' - ' + crs_description)
 
     def evt_itm_selected(self, item):
-        """"The function manages the selection of items in the tree and updates the corresponding
+        """The function manages the selection of items in the tree and updates the corresponding
         lists (dir_list or csvLst) based on the checked or unchecked state of the items."""
         # get item's full path
         full_path = self.get_full_path_for_tree_item(item)
@@ -498,7 +498,7 @@ class CsvLayersList:
 
     def dir_checked(self, item):
         """The function adds the checked directory and its children to the corresponding lists
-        (dir_list and csvLst) and recursively checks all child items under the directory."""
+        (dir_list and csvLst) and recursively checks all child items under the directory"""
         # get item's full path
         item_path = self.get_full_path_for_tree_item(item)
 
@@ -523,7 +523,7 @@ class CsvLayersList:
 
     def dir_unchecked(self, item):
         """The function remove the unchecked directory and its children from the corresponding lists
-        (dir_list and csvLst) and recursively checks all child items under the directory."""
+        (dir_list and csvLst) and recursively checks all child items under the directory"""
         # get item's full path
         item_path = self.get_full_path_for_tree_item(item)
 
@@ -547,7 +547,7 @@ class CsvLayersList:
             self.dir_unchecked(child_item)
 
     def on_rejected(self):
-        """"The function resets the state of the dialog and clears any selected values
+        """The function resets the state of the dialog and clears any selected values
          or lists associated with it when the user cancels the dialog."""
         # Perform actions when the dialog is rejected (Cancel button clicked)
         # clear tree every time you run the plugin
@@ -558,7 +558,6 @@ class CsvLayersList:
         self.dlg.crs_cmbBox.clear()
         self.csv_lst = []
         self.dir_list = []
-        self.include_all = []
         self.dlg.close()
 
     def run(self):
